@@ -75,6 +75,19 @@ def fail_notion(page_id):
         })
     )
 
+def genres_ids_into_strings(genres_ids, igdb_token):
+    res = []
+    ids = "(" + (",".join(str(id) for id in genres_ids)) + ")"
+    r = requests.post(f'{IGDB_BASE_URL}/genres',
+                              data=f'fields name; where id={ids};'.encode('utf-8'),
+                              headers=igdb_headers(igdb_token))
+
+    if r.status_code == 200 and len(r.json()) > 0:
+        data = r.json()
+        for igdb_genre in data:
+            res.append(igdb_genre["name"])
+    return res
+
 
 def check_and_update_notion():
     r_db = requests.post(
