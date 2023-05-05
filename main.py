@@ -131,6 +131,13 @@ def check_and_update_notion():
             }
         }
 
+        if len(gd.genres) > 0:
+            update_data["properties"]["Genre"] = {}
+            genres_json = []
+            for genre in gd.genres:
+                genres_json.append({"name": genre})
+            update_data["properties"]["Genre"]["multi_select"] = genres_json
+
         if gd.front is not None:
             update_data['properties']['Grid'] = {
                 "files": [
@@ -397,6 +404,7 @@ class GameData:
         self.wikipedia_link = None
         self.igdb_description = None
         self.igdb_images = []
+        self.genres = []
 
         # Youtube Trailer link
         self.yt_trailer = None
@@ -462,7 +470,7 @@ class GameData:
         self.steamgrid_id = r.json()['data'][0]['id']
         return True
     
-    def genres_ids_into_strings(genres_ids, igdb_token):
+    def genres_ids_into_strings(self, genres_ids, igdb_token):
         res = []
         ids = "(" + (",".join(str(id) for id in genres_ids)) + ")"
         r = requests.post(f'{IGDB_BASE_URL}/genres',
@@ -555,6 +563,8 @@ class GameData:
                     self.release_date = datetime.utcfromtimestamp(int(igdb_game['first_release_date'])).strftime('%d %b %Y')
                 if 'summary' in igdb_game.keys():
                     self.igdb_description = igdb_game['summary']
+                if 'genres' in igdb_game.keys():
+                    self.genres = self.genres_ids_into_strings(igdb_game['genres'], igdb_token)
 
                 # Wikipedia Link
                 r_website = requests.post(f'{IGDB_BASE_URL}/websites',
