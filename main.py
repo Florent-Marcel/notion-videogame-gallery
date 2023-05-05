@@ -472,6 +472,7 @@ class GameData:
     
     def genres_ids_into_strings(self, genres_ids, igdb_token):
         res = []
+        dico = {12: "RPG", 11: "Real Time Strategy", 16: "Turn-based strategy"}
         ids = "(" + (",".join(str(id) for id in genres_ids)) + ")"
         r = requests.post(f'{IGDB_BASE_URL}/genres',
                                   data=f'fields name; where id={ids};'.encode('utf-8'),
@@ -480,7 +481,10 @@ class GameData:
         if r.status_code == 200 and len(r.json()) > 0:
             data = r.json()
             for igdb_genre in data:
-                res.append(igdb_genre["name"])
+                if igdb_genre["id"] in dico:
+                    res.append(dico[igdb_genre["id"]])
+                else:
+                    res.append(igdb_genre["name"])
         return res
 
     def request_image_by_name(self, image_type, params):
