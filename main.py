@@ -2,8 +2,9 @@ import requests
 from datetime import datetime
 import json
 import time
+import math
 
-#from howlongtobeatpy import HowLongToBeat
+from howlongtobeatpy import HowLongToBeat
 import googleapiclient.discovery, googleapiclient.errors
 from youtube_search import YoutubeSearch
 
@@ -425,10 +426,9 @@ class GameData:
         self.time_to_beat_completionist = None
 
     @staticmethod
-    def __format_hltb(hltb_string):
-        if hltb_string.find("½") >= 2:
-            hltb_string = hltb_string.replace("½", "")
-        return hltb_string.replace("Hours", "h").replace("Minutes", "m")
+    def __hltb_to_string(htlb):
+        floor = math.floor(htlb)
+        return str(floor) + "h " + str(math.floor((htlb - floor) * 60)) + "m"
 
     def fetch_data_by_steamid(self, steamid):
 
@@ -545,7 +545,6 @@ class GameData:
 
     def __fetch_meta_data(self):
 
-        """ removed until libraries are fixed
         # HLTB
         results = HowLongToBeat().search(self.name)
 
@@ -562,10 +561,10 @@ class GameData:
             hltb = max(results, key=lambda element: element.similarity)
 
             self.time_to_beat_weblink = hltb.game_web_link
-            self.time_to_beat_main = GameData.__format_hltb(f"{hltb.gameplay_main} {hltb.gameplay_main_unit}")
-            self.time_to_beat_extra = GameData.__format_hltb(f"{hltb.gameplay_main_extra} {hltb.gameplay_main_extra_unit}")
-            self.time_to_beat_completionist = GameData.__format_hltb(f"{hltb.gameplay_completionist} {hltb.gameplay_completionist_unit}")
-        """
+            self.time_to_beat_main = GameData.__hltb_to_string(hltb.main_story)
+            self.time_to_beat_extra = GameData.__hltb_to_string(hltb.main_extra)
+            self.time_to_beat_completionist = GameData.__hltb_to_string(hltb.completionist)
+
         # IGDB Data
         r_creds = requests.post(
             f"https://id.twitch.tv/oauth2/token?client_id={config.IGDB_CLIENT_ID}&client_secret={config.IGDB_SECRET}&grant_type=client_credentials")
