@@ -75,7 +75,6 @@ def fail_notion(page_id):
         })
     )
 
-
 def check_and_update_notion():
     r_db = requests.post(
         f"{NOTION_BASE_URL}/databases/{config.DATABASE_ID}/query",
@@ -131,6 +130,20 @@ def check_and_update_notion():
                 },
             }
         }
+
+        if len(gd.genres) > 0:
+            update_data["properties"]["Genre"] = {}
+            genres_json = []
+            for genre in gd.genres:
+                genres_json.append({"name": genre})
+            update_data["properties"]["Genre"]["multi_select"] = genres_json
+
+        if len(gd.themes) > 0:
+            update_data["properties"]["Theme"] = {}
+            themes_json = []
+            for theme in gd.themes:
+                themes_json.append({"name": theme})
+            update_data["properties"]["Theme"]["multi_select"] = themes_json
 
         if gd.front is not None:
             update_data['properties']['Grid'] = {
@@ -398,6 +411,8 @@ class GameData:
         self.wikipedia_link = None
         self.igdb_description = None
         self.igdb_images = []
+        self.genres = []
+        self.themes = []
 
         # Youtube Trailer link
         self.yt_trailer = None
@@ -462,6 +477,40 @@ class GameData:
 
         self.steamgrid_id = r.json()['data'][0]['id']
         return True
+    
+    def genres_ids_into_strings(self, genres_ids, igdb_token):
+        res = []
+        dico = {12: "RPG", 11: "Real Time Strategy", 16: "Turn-based strategy"}
+        ids = "(" + (",".join(str(id) for id in genres_ids)) + ")"
+        r = requests.post(f'{IGDB_BASE_URL}/genres',
+                                  data=f'fields name; where id={ids};'.encode('utf-8'),
+                                  headers=igdb_headers(igdb_token))
+
+        if r.status_code == 200 and len(r.json()) > 0:
+            data = r.json()
+            for igdb_genre in data:
+                if igdb_genre["id"] in dico:
+                    res.append(dico[igdb_genre["id"]])
+                else:
+                    res.append(igdb_genre["name"])
+        return res
+    
+    def themes_ids_into_strings(self, themes_ids, igdb_token):
+        res = []
+        dico = {41: "4X"}
+        ids = "(" + (",".join(str(id) for id in themes_ids)) + ")"
+        r = requests.post(f'{IGDB_BASE_URL}/themes',
+                                  data=f'fields name; where id={ids};'.encode('utf-8'),
+                                  headers=igdb_headers(igdb_token))
+
+        if r.status_code == 200 and len(r.json()) > 0:
+            data = r.json()
+            for igdb_theme in data:
+                if igdb_theme["id"] in dico:
+                    res.append(dico[igdb_theme["id"]])
+                else:
+                    res.append(igdb_theme["name"])
+        return res
 
     def request_image_by_name(self, image_type, params):
         if not self.steamgrid_id:
@@ -543,6 +592,10 @@ class GameData:
                     self.release_date = datetime.utcfromtimestamp(int(igdb_game['first_release_date'])).strftime('%d %b %Y')
                 if 'summary' in igdb_game.keys():
                     self.igdb_description = igdb_game['summary']
+                if 'genres' in igdb_game.keys():
+                    self.genres = self.genres_ids_into_strings(igdb_game['genres'], igdb_token)
+                if 'themes' in igdb_game.keys():
+                    self.themes = self.themes_ids_into_strings(igdb_game['themes'], igdb_token)
 
                 # Wikipedia Link
                 r_website = requests.post(f'{IGDB_BASE_URL}/websites',
