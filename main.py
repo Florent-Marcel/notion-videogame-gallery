@@ -138,6 +138,13 @@ def check_and_update_notion():
                 genres_json.append({"name": genre})
             update_data["properties"]["Genre"]["multi_select"] = genres_json
 
+        if len(gd.themes) > 0:
+            update_data["properties"]["Theme"] = {}
+            themes_json = []
+            for theme in gd.themes:
+                themes_json.append({"name": theme})
+            update_data["properties"]["Theme"]["multi_select"] = themes_json
+
         if gd.front is not None:
             update_data['properties']['Grid'] = {
                 "files": [
@@ -405,6 +412,7 @@ class GameData:
         self.igdb_description = None
         self.igdb_images = []
         self.genres = []
+        self.themes = []
 
         # Youtube Trailer link
         self.yt_trailer = None
@@ -485,6 +493,23 @@ class GameData:
                     res.append(dico[igdb_genre["id"]])
                 else:
                     res.append(igdb_genre["name"])
+        return res
+    
+    def themes_ids_into_strings(self, themes_ids, igdb_token):
+        res = []
+        dico = {41: "4X"}
+        ids = "(" + (",".join(str(id) for id in themes_ids)) + ")"
+        r = requests.post(f'{IGDB_BASE_URL}/themes',
+                                  data=f'fields name; where id={ids};'.encode('utf-8'),
+                                  headers=igdb_headers(igdb_token))
+
+        if r.status_code == 200 and len(r.json()) > 0:
+            data = r.json()
+            for igdb_theme in data:
+                if igdb_theme["id"] in dico:
+                    res.append(dico[igdb_theme["id"]])
+                else:
+                    res.append(igdb_theme["name"])
         return res
 
     def request_image_by_name(self, image_type, params):
@@ -569,6 +594,8 @@ class GameData:
                     self.igdb_description = igdb_game['summary']
                 if 'genres' in igdb_game.keys():
                     self.genres = self.genres_ids_into_strings(igdb_game['genres'], igdb_token)
+                if 'themes' in igdb_game.keys():
+                    self.themes = self.themes_ids_into_strings(igdb_game['themes'], igdb_token)
 
                 # Wikipedia Link
                 r_website = requests.post(f'{IGDB_BASE_URL}/websites',
