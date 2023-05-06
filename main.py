@@ -138,9 +138,9 @@ def check_and_update_notion():
             genres_json = []
             for genre in gd.genres:
                 if genre["id"] in dico:
-                    genres_json.append({"name": dico[genre["id"]]})
+                    genres_json.append({"name": dico[genre["id"]].replace(",", "")})
                 else:
-                    genres_json.append({"name": genre["name"]})
+                    genres_json.append({"name": genre["name"].replace(",", "")})
             update_data["properties"]["Genre"]["multi_select"] = genres_json
 
         if len(gd.themes) > 0:
@@ -149,23 +149,23 @@ def check_and_update_notion():
             themes_json = []
             for theme in gd.themes:
                 if theme["id"] in dico:
-                    themes_json.append({"name": dico[theme["id"]]})
+                    themes_json.append({"name": dico[theme["id"]].replace(",", "")})
                 else:
-                    themes_json.append({"name": theme["name"]})
+                    themes_json.append({"name": theme["name"].replace(",", "")})
             update_data["properties"]["Theme"]["multi_select"] = themes_json
 
         if len(gd.developers) > 0:
             update_data["properties"]["Developer"] = {}
             developers_json = []
             for developer in gd.developers:
-                developers_json.append({"name": developer["company"]["name"]})
+                developers_json.append({"name": developer["company"]["name"].replace(",", "")})
             update_data["properties"]["Developer"]["multi_select"] = developers_json
 
         if len(gd.publishers) > 0:
             update_data["properties"]["Publisher"] = {}
             publishers_json = []
             for publisher in gd.publishers:
-                publishers_json.append({"name": publisher["company"]["name"]})
+                publishers_json.append({"name": publisher["company"]["name"].replace(",", "")})
             update_data["properties"]["Publisher"]["multi_select"] = publishers_json
 
         if gd.time_to_beat_all_styles is not None:
