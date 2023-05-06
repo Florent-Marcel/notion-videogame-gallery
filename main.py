@@ -154,6 +154,20 @@ def check_and_update_notion():
                     themes_json.append({"name": theme["name"]})
             update_data["properties"]["Theme"]["multi_select"] = themes_json
 
+        if len(gd.developers) > 0:
+            update_data["properties"]["Developer"] = {}
+            developers_json = []
+            for developer in gd.developers:
+                developers_json.append({"name": developer["company"]["name"]})
+            update_data["properties"]["Developer"]["multi_select"] = developers_json
+
+        if len(gd.publishers) > 0:
+            update_data["properties"]["Publisher"] = {}
+            publishers_json = []
+            for publisher in gd.publishers:
+                publishers_json.append({"name": publisher["company"]["name"]})
+            update_data["properties"]["Publisher"]["multi_select"] = publishers_json
+
         if(gd.time_to_beat_all_styles) is not None:
             update_data['properties']['How Long to Beat'] = {}
             update_data['properties']['How Long to Beat']['number'] = gd.time_to_beat_all_styles
@@ -426,6 +440,8 @@ class GameData:
         self.igdb_images = []
         self.genres = []
         self.themes = []
+        self.developers = []
+        self.publishers = []
 
         # Youtube Trailer link
         self.yt_trailer = None
@@ -575,6 +591,9 @@ class GameData:
                     self.genres = igdb_game["genres"]
                 if 'themes' in igdb_game.keys():
                     self.themes = igdb_game["themes"]
+                if 'involved_companies' in igdb_game.keys():
+                    self.developers = list(filter(lambda d: d["developer"] is True, igdb_game["involved_companies"]))
+                    self.publishers = list(filter(lambda p: p["developer"] is False and p["publisher"] is True, igdb_game["involved_companies"]))
 
                 # Wikipedia Link
                 r_website = requests.post(f'{IGDB_BASE_URL}/websites',
