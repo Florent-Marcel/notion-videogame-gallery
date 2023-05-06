@@ -133,17 +133,25 @@ def check_and_update_notion():
         }
 
         if len(gd.genres) > 0:
+            dico = {12: "RPG", 11: "Real Time Strategy", 16: "Turn-based strategy"}
             update_data["properties"]["Genre"] = {}
             genres_json = []
             for genre in gd.genres:
-                genres_json.append({"name": genre})
+                if genre["id"] in dico:
+                    genres_json.append({"name": dico[genre["id"]]})
+                else:
+                    genres_json.append({"name": genre["name"]})
             update_data["properties"]["Genre"]["multi_select"] = genres_json
 
         if len(gd.themes) > 0:
+            dico = {41: "4X"}
             update_data["properties"]["Theme"] = {}
             themes_json = []
             for theme in gd.themes:
-                themes_json.append({"name": theme})
+                if theme["id"] in dico:
+                    themes_json.append({"name": dico[theme["id"]]})
+                else:
+                    themes_json.append({"name": theme["name"]})
             update_data["properties"]["Theme"]["multi_select"] = themes_json
 
         if(gd.time_to_beat_all_styles) is not None:
@@ -483,40 +491,6 @@ class GameData:
         self.steamgrid_id = r.json()['data'][0]['id']
         return True
     
-    def genres_ids_into_strings(self, genres_ids, igdb_token):
-        res = []
-        dico = {12: "RPG", 11: "Real Time Strategy", 16: "Turn-based strategy"}
-        ids = "(" + (",".join(str(id) for id in genres_ids)) + ")"
-        r = requests.post(f'{IGDB_BASE_URL}/genres',
-                                  data=f'fields name; where id={ids};'.encode('utf-8'),
-                                  headers=igdb_headers(igdb_token))
-
-        if r.status_code == 200 and len(r.json()) > 0:
-            data = r.json()
-            for igdb_genre in data:
-                if igdb_genre["id"] in dico:
-                    res.append(dico[igdb_genre["id"]])
-                else:
-                    res.append(igdb_genre["name"])
-        return res
-    
-    def themes_ids_into_strings(self, themes_ids, igdb_token):
-        res = []
-        dico = {41: "4X"}
-        ids = "(" + (",".join(str(id) for id in themes_ids)) + ")"
-        r = requests.post(f'{IGDB_BASE_URL}/themes',
-                                  data=f'fields name; where id={ids};'.encode('utf-8'),
-                                  headers=igdb_headers(igdb_token))
-
-        if r.status_code == 200 and len(r.json()) > 0:
-            data = r.json()
-            for igdb_theme in data:
-                if igdb_theme["id"] in dico:
-                    res.append(dico[igdb_theme["id"]])
-                else:
-                    res.append(igdb_theme["name"])
-        return res
-
     def request_image_by_name(self, image_type, params):
         if not self.steamgrid_id:
             if not self.fetch_steamgrid_id():
@@ -581,7 +555,7 @@ class GameData:
             igdb_token = r_creds.json()['access_token']
 
             r = requests.post(f'{IGDB_BASE_URL}/games',
-                              data=f'fields *; search "{self.name}";'.encode('utf-8'),
+                              data=f'fields *, genres.name, themes.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher;search "{self.name}";'.encode('utf-8'),
                               headers=igdb_headers(igdb_token))
 
             if r.status_code == 200 and len(r.json()) > 0:
@@ -598,9 +572,9 @@ class GameData:
                 if 'summary' in igdb_game.keys():
                     self.igdb_description = igdb_game['summary']
                 if 'genres' in igdb_game.keys():
-                    self.genres = self.genres_ids_into_strings(igdb_game['genres'], igdb_token)
+                    self.genres = igdb_game["genres"]
                 if 'themes' in igdb_game.keys():
-                    self.themes = self.themes_ids_into_strings(igdb_game['themes'], igdb_token)
+                    self.themes = igdb_game["themes"]
 
                 # Wikipedia Link
                 r_website = requests.post(f'{IGDB_BASE_URL}/websites',
