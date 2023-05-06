@@ -179,6 +179,11 @@ def check_and_update_notion():
                 }
             }
 
+        if gd.igdb_rating is not None:
+            update_data['properties']["IGDB Rating"] = {
+                "number": round(gd.igdb_rating, 0)
+            }
+
         if gd.front is not None:
             update_data['properties']['Grid'] = {
                 "files": [
@@ -445,6 +450,7 @@ class GameData:
         self.release_date_iso = None
         self.wikipedia_link = None
         self.igdb_description = None
+        self.igdb_rating = None
         self.igdb_images = []
         self.genres = []
         self.themes = []
@@ -603,6 +609,13 @@ class GameData:
                 if 'involved_companies' in igdb_game.keys():
                     self.developers = list(filter(lambda d: d["developer"] is True, igdb_game["involved_companies"]))
                     self.publishers = list(filter(lambda p: p["developer"] is False and p["publisher"] is True, igdb_game["involved_companies"]))
+                if 'rating' in igdb_game.keys():
+                    self.igdb_rating = igdb_game["rating"]
+                if 'aggregated_rating' in igdb_game.keys():
+                    if self.igdb_rating is not None:
+                        self.igdb_rating = (self.igdb_rating + igdb_game["aggregated_rating"]) /2
+                    else:
+                        self.igdb_rating = igdb_game["aggregated_rating"]
 
                 # Wikipedia Link
                 r_website = requests.post(f'{IGDB_BASE_URL}/websites',
