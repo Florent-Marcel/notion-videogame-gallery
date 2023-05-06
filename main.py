@@ -168,9 +168,16 @@ def check_and_update_notion():
                 publishers_json.append({"name": publisher["company"]["name"]})
             update_data["properties"]["Publisher"]["multi_select"] = publishers_json
 
-        if(gd.time_to_beat_all_styles) is not None:
+        if gd.time_to_beat_all_styles is not None:
             update_data['properties']['How Long to Beat'] = {}
             update_data['properties']['How Long to Beat']['number'] = gd.time_to_beat_all_styles
+
+        if gd.release_date_iso is not None:
+            update_data['properties']['Release date'] = {
+                "date": {
+                    "start": gd.release_date_iso
+                }
+            }
 
         if gd.front is not None:
             update_data['properties']['Grid'] = {
@@ -435,6 +442,7 @@ class GameData:
 
         # IGDB Data
         self.release_date = None
+        self.release_date_iso = None
         self.wikipedia_link = None
         self.igdb_description = None
         self.igdb_images = []
@@ -585,6 +593,7 @@ class GameData:
                 # Plain Meta Data
                 if 'first_release_date' in igdb_game.keys():
                     self.release_date = datetime.utcfromtimestamp(int(igdb_game['first_release_date'])).strftime('%d %b %Y')
+                    self.release_date_iso = datetime.utcfromtimestamp(int(igdb_game['first_release_date'])).strftime('%Y-%m-%d')
                 if 'summary' in igdb_game.keys():
                     self.igdb_description = igdb_game['summary']
                 if 'genres' in igdb_game.keys():
