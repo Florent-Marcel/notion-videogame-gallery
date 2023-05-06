@@ -146,6 +146,10 @@ def check_and_update_notion():
                 themes_json.append({"name": theme})
             update_data["properties"]["Theme"]["multi_select"] = themes_json
 
+        if(gd.time_to_beat_all_styles) is not None:
+            update_data['properties']['How Long to Beat'] = {}
+            update_data['properties']['How Long to Beat']['number'] = gd.time_to_beat_all_styles
+
         if gd.front is not None:
             update_data['properties']['Grid'] = {
                 "files": [
@@ -424,6 +428,7 @@ class GameData:
         self.time_to_beat_main = None
         self.time_to_beat_extra = None
         self.time_to_beat_completionist = None
+        self.time_to_beat_all_styles = None
 
     @staticmethod
     def __hltb_to_string(htlb):
@@ -564,6 +569,7 @@ class GameData:
             self.time_to_beat_main = GameData.__hltb_to_string(hltb.main_story)
             self.time_to_beat_extra = GameData.__hltb_to_string(hltb.main_extra)
             self.time_to_beat_completionist = GameData.__hltb_to_string(hltb.completionist)
+            self.time_to_beat_all_styles = hltb.all_styles 
 
         # IGDB Data
         r_creds = requests.post(
